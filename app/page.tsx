@@ -1,7 +1,7 @@
 "use client";
 
 import { ComfyJSInstance } from "comfy.js";
-import React, {SyntheticEvent, useEffect, useRef, useState} from "react";
+import React, { SyntheticEvent, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import QueueTabContent from "@/components/QueueTabContent";
 import SongListTabContent from "@/components/SongListTabContent";
@@ -40,15 +40,11 @@ export default function Home() {
 
   const viewerRef = useRef<HTMLInputElement>(null);
   const idRef = useRef<HTMLInputElement>(null);
+  const songsRef = useRef<SongMap>(songs);
 
   useEffect(() => {
-    try {
-      if (twitchChannel) localStorage.setItem("tk:twitchChannel", twitchChannel);
-      if (sheetUrl) localStorage.setItem("tk:sheetUrl", sheetUrl);
-    } catch (e) {
-      console.error("localStorage save error", e);
-    }
-  }, [twitchChannel, sheetUrl]);
+    songsRef.current = songs;
+  }, [songs]);
 
   useEffect(() => {
     let comfy: ComfyJSInstance | null = null;
@@ -67,14 +63,26 @@ export default function Home() {
 
         comfy.onCommand = (user: string, command: string, message: string) => {
           const cmd = command.toLowerCase();
-          if (cmd !== "sr" && cmd !== "request") return;
+          if (cmd !== "request") return;
 
           const id = message.trim().split(/\s+/)[0]?.toUpperCase();
           if (!id) return;
 
           setQueue((current) => {
-            const entry = buildEntryFromId(id, user);
-            if (!entry) return current;
+            const song = songsRef.current[id];
+            if (!song) {
+              setError(t("errors.songIdNotFound", { id }));
+              setTimeout(() => setError(""), 4000);
+              return current;
+            }
+
+            const entry: QueueEntry = {
+              id,
+              name: song.name,
+              url: song.url,
+              viewer: user || "viewer",
+              addedAt: Date.now(),
+            };
             return [...current, entry];
           });
         };
@@ -93,10 +101,10 @@ export default function Home() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [twitchChannel, songs]);
+  }, [twitchChannel]);
 
   function buildEntryFromId(id: string, viewer: string): QueueEntry | null {
-    const song = songs[id];
+    const song = songsRef.current[id];
     if (!song) {
       setError(t("errors.songIdNotFound", { id }));
       setTimeout(() => setError(""), 4000);
@@ -111,6 +119,32 @@ export default function Home() {
       addedAt: Date.now(),
     };
   }
+
+  const handleTwitchChannelChange = (value: string) => {
+    setTwitchChannel(value);
+    try {
+      if (value) {
+        localStorage.setItem("tk:twitchChannel", value);
+      } else {
+        localStorage.removeItem("tk:twitchChannel");
+      }
+    } catch (e) {
+      console.error("localStorage save error", e);
+    }
+  };
+
+  const handleSheetUrlChange = (value: string) => {
+    setSheetUrl(value);
+    try {
+      if (value) {
+        localStorage.setItem("tk:sheetUrl", value);
+      } else {
+        localStorage.removeItem("tk:sheetUrl");
+      }
+    } catch (e) {
+      console.error("localStorage save error", e);
+    }
+  };
 
   async function fetchSongs() {
     setError("");
@@ -277,7 +311,7 @@ export default function Home() {
             <input
               className="mb-2 w-full rounded border border-gray-700 bg-gray-800 px-3 py-2"
               value={twitchChannel}
-              onChange={(e) => setTwitchChannel(e.target.value)}
+              onChange={(e) => handleTwitchChannelChange(e.target.value)}
               placeholder={t("settingsFields.twitchChannelPlaceholder")}
             />
 
@@ -285,7 +319,7 @@ export default function Home() {
             <input
               className="mb-2 w-full rounded border border-gray-700 bg-gray-800 px-3 py-2"
               value={sheetUrl}
-              onChange={(e) => setSheetUrl(e.target.value)}
+              onChange={(e) => handleSheetUrlChange(e.target.value)}
               placeholder={t("settingsFields.googleSheetUrlPlaceholder")}
             />
 
@@ -302,10 +336,8 @@ export default function Home() {
               <button
                 className="flex-1 rounded bg-red-600 px-3 py-2"
                 onClick={() => {
-                  setTwitchChannel("");
-                  setSheetUrl("");
-                  localStorage.removeItem("tk:twitchChannel");
-                  localStorage.removeItem("tk:sheetUrl");
+                  handleTwitchChannelChange("");
+                  handleSheetUrlChange("");
                 }}
               >
                 {t("reset")}
