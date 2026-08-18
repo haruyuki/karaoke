@@ -21,13 +21,23 @@
       "twitchChannel": "Twitch Channel",
       "twitchChannelPlaceholder": "streamer_channel_name",
       "googleSheetUrl": "Google Sheet URL",
-      "googleSheetUrlPlaceholder": "https://docs.google.com/spreadsheets/d/{id}"
+      "googleSheetUrlPlaceholder": "https://docs.google.com/spreadsheets/d/XXX"
+    },
+    "auth": {
+      "connected": "Connected to Twitch chat with write permissions",
+      "disconnected": "Disconnected from Twitch chat",
+      "connectHelp": "Connect to send chat responses automatically",
+      "missingClientId": "Twitch Client ID not configured. Please add NEXT_PUBLIC_TWITCH_CLIENT_ID to your .env.local file."
+    },
+    "chat": {
+      "confirmation": "Successfully added [{id}] {name} to the queue!",
+      "botConnected": "Song request bot is now online and ready!"
     },
     "errors": {
-      "songIdNotFound": "Song id {id} not found in sheet.",
-      "noSheetUrlProvided": "No sheet URL provided.",
-      "fetchFailed": "Fetch failed: {status}",
-      "provideId": "Provide an ID"
+      "songIdNotFound": "Song ID '{id}' not found in the database",
+      "provideId": "Please provide a song ID",
+      "noSheetUrlProvided": "No Google Sheet URL provided",
+      "fetchFailed": "Failed to fetch songs. Status: {status}"
     }
   },
   "QueueTab": {
