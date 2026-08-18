@@ -47,7 +47,7 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
   const handleCommand = useCallback(
     (user: string, command: string, message: string) => {
       const cmd = command.toLowerCase();
-      if (cmd !== 'request') return;
+      if (cmd !== 'addsong' && cmd !== '點歌' && cmd !== 'うた') return;
 
       const id = message.trim().split(/\s+/)[0]?.toUpperCase();
       if (!id) return;

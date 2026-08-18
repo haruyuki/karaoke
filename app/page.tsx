@@ -6,13 +6,6 @@ import QueueTabContent from '@/components/QueueTabContent';
 import SongListTabContent from '@/components/SongListTabContent';
 import Header from '@/components/Header';
 import { useTwitchChat } from '@/hooks/useTwitchChat';
-import {
-  getTwitchToken,
-  removeTwitchToken,
-  cleanUrlHash,
-  getTwitchAuthUrl,
-  isAuthenticated as checkAuth,
-} from '@/utils/twitchHelpers';
 
 type SongEntry = {
   name: string;
@@ -220,8 +213,10 @@ export default function Home() {
 
         <div className="mt-auto space-y-4 p-4">
           <div className="text-xs text-gray-500">
-            {t('tipPrefix')} <code className="rounded bg-gray-800 px-1">!sr ID</code> or{' '}
-            <code className="rounded bg-gray-800 px-1">!request ID</code>
+            {t('tipPrefix')}{' '}
+            <code className="rounded bg-gray-800 px-1">!addsong ID</code> or{' '}
+            <code className="rounded bg-gray-800 px-1">!點歌 ID</code> or{' '}
+            <code className="rounded bg-gray-800 px-1">!うた ID</code>
           </div>
 
           <div>
