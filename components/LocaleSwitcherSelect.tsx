@@ -21,7 +21,9 @@ export default function LocaleSwitcherSelect({ defaultValue, items, label }: Pro
     setSelectedValue(value);
     setIsOpen(false);
     startTransition(() => {
-      setUserLocale(locale).then(r => console.log('Locale set:', r)).catch(e => console.error('Error setting locale:', e));
+      setUserLocale(locale)
+        .then((r) => console.log('Locale set:', r))
+        .catch((e) => console.error('Error setting locale:', e));
     });
   }
 

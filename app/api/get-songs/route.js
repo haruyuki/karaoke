@@ -42,7 +42,7 @@ function parseCSV(text) {
     rows.push(row);
   }
   // normalize trimming
-  return rows.map(r => r.map(cell => (cell || '').trim()));
+  return rows.map((r) => r.map((cell) => (cell || '').trim()));
 }
 
 export async function GET(request) {
@@ -72,7 +72,13 @@ export async function GET(request) {
         // allow direct google.com published CSVs
         fetchUrl = sheetUrl;
       } else {
-        return NextResponse.json({ error: 'sheetUrl must be a Google Sheets URL (docs.google.com/spreadsheets/d/...) or a published Google CSV' }, { status: 400 });
+        return NextResponse.json(
+          {
+            error:
+              'sheetUrl must be a Google Sheets URL (docs.google.com/spreadsheets/d/...) or a published Google CSV',
+          },
+          { status: 400 },
+        );
       }
     } catch {
       return NextResponse.json({ error: 'Invalid sheetUrl' }, { status: 400 });

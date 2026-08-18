@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
 import React from 'react';
-import {MicVocal} from "lucide-react";
-import LocaleSwitcher from "@/components/LocaleSwitcher";
-import {useTranslations} from "next-intl";
+import { MicVocal } from 'lucide-react';
+import LocaleSwitcher from '@/components/LocaleSwitcher';
+import { useTranslations } from 'next-intl';
 
 export default function Header() {
   const t = useTranslations('Header');

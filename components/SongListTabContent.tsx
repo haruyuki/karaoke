@@ -1,5 +1,5 @@
-import React from "react";
-import { useTranslations } from "next-intl";
+import React from 'react';
+import { useTranslations } from 'next-intl';
 
 type SongEntry = {
   name: string;
@@ -14,13 +14,13 @@ type Props = {
 };
 
 export default function SongListTabContent({ songs, onQueueSong }: Props) {
-  const t = useTranslations("SongListTab");
+  const t = useTranslations('SongListTab');
   const entries = Object.entries(songs).slice(0, 200);
 
   return (
     <section className="space-y-4">
-      <h2 className="text-xl font-semibold">{t("title")}</h2>
-      {entries.length === 0 && <div className="text-gray-500">{t("noSongsLoaded")}</div>}
+      <h2 className="text-xl font-semibold">{t('title')}</h2>
+      {entries.length === 0 && <div className="text-gray-500">{t('noSongsLoaded')}</div>}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {entries.map(([id, s]) => (
           <div key={id} className="flex items-center justify-between rounded bg-gray-800 p-3">
@@ -37,13 +37,13 @@ export default function SongListTabContent({ songs, onQueueSong }: Props) {
                 rel="noreferrer"
                 className="rounded bg-blue-600 px-3 py-1 text-sm"
               >
-                {t("open")}
+                {t('open')}
               </a>
               <button
                 onClick={() => onQueueSong(id, s.name, s.url)}
                 className="rounded bg-green-600 px-3 py-1 text-sm"
               >
-                {t("queue")}
+                {t('queue')}
               </button>
             </div>
           </div>
