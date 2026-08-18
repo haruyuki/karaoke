@@ -1,0 +1,50 @@
+{
+  "Header": {
+    "title": "Haru Karaoke"
+  },
+  "Page": {
+    "tabs": {
+      "queue": "點歌佇列",
+      "songlist": "歌曲清單"
+    },
+    "songsLoaded": "已載入歌曲",
+    "loadedSongsCount": "已載入歌曲：{count}",
+    "settings": "設定",
+    "refreshSongs": "重新載入歌曲",
+    "close": "關閉",
+    "saveAndLoad": "儲存並載入",
+    "reset": "重設",
+    "tipPrefix": "提示：聊天室指令",
+    "errorPrefix": "錯誤：{error}",
+    "settingsHelp": "請確認試算表已公開或已發佈為 CSV。應用程式會自動把試算表連結轉成 CSV 匯出連結。",
+    "settingsFields": {
+      "twitchChannel": "Twitch 頻道",
+      "twitchChannelPlaceholder": "streamer_channel_name",
+      "googleSheetUrl": "Google 試算表網址",
+      "googleSheetUrlPlaceholder": "https://docs.google.com/spreadsheets/d/{id}"
+    },
+    "errors": {
+      "songIdNotFound": "找不到歌曲 ID {id}。",
+      "noSheetUrlProvided": "尚未提供試算表網址。",
+      "fetchFailed": "抓取失敗：{status}",
+      "provideId": "請輸入 ID"
+    }
+  },
+  "QueueTab": {
+    "title": "點歌佇列",
+    "clearQueue": "清空佇列",
+    "idPlaceholder": "ID 例如 C213",
+    "viewerPlaceholder": "觀眾名稱（可選）",
+    "addToQueue": "加入佇列",
+    "queueEmpty": "佇列為空",
+    "requestedBy": "點歌者：{viewer}",
+    "openLink": "開啟連結",
+    "remove": "移除"
+  },
+  "SongListTab": {
+    "title": "歌曲清單（前 200 筆）",
+    "noSongsLoaded": "尚未載入歌曲",
+    "open": "開啟",
+    "queue": "加入佇列"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "Header": {
+    "title": "Haru Karaoke"
+  },
+  "Page": {
+    "tabs": {
+      "queue": "Queue",
+      "songlist": "Songlist"
+    },
+    "songsLoaded": "Songs loaded",
+    "loadedSongsCount": "Loaded songs: {count}",
+    "settings": "Settings",
+    "refreshSongs": "Refresh Songs",
+    "close": "Close",
+    "saveAndLoad": "Save & Load",
+    "reset": "Reset",
+    "tipPrefix": "Tip: Use chat commands",
+    "errorPrefix": "Error: {error}",
+    "settingsHelp": "Make sure sheet is public or published as CSV. App converts sheet link to CSV export URL automatically.",
+    "settingsFields": {
+      "twitchChannel": "Twitch Channel",
+      "twitchChannelPlaceholder": "streamer_channel_name",
+      "googleSheetUrl": "Google Sheet URL",
+      "googleSheetUrlPlaceholder": "https://docs.google.com/spreadsheets/d/{id}"
+    },
+    "errors": {
+      "songIdNotFound": "Song id {id} not found in sheet.",
+      "noSheetUrlProvided": "No sheet URL provided.",
+      "fetchFailed": "Fetch failed: {status}",
+      "provideId": "Provide an ID"
+    }
+  },
+  "QueueTab": {
+    "title": "Queue List",
+    "clearQueue": "Clear Queue",
+    "idPlaceholder": "ID e.g. C213",
+    "viewerPlaceholder": "Viewer name (optional)",
+    "addToQueue": "Add to Queue",
+    "queueEmpty": "Queue empty",
+    "requestedBy": "Requested by {viewer}",
+    "openLink": "Open Link",
+    "remove": "Remove"
+  },
+  "SongListTab": {
+    "title": "Song List (first 200)",
+    "noSongsLoaded": "No songs loaded",
+    "open": "Open",
+    "queue": "Queue"
+  }
+}
