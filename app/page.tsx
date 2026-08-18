@@ -1,8 +1,8 @@
 "use client";
 
-import { ComfyJSInstance } from "comfy.js";
-import React, { SyntheticEvent, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import {ComfyJSInstance} from "comfy.js";
+import React, {SyntheticEvent, useEffect, useRef, useState} from "react";
+import {useTranslations} from "next-intl";
 import QueueTabContent from "@/components/QueueTabContent";
 import SongListTabContent from "@/components/SongListTabContent";
 import Header from "@/components/Header";
@@ -49,6 +49,8 @@ export default function Home() {
   useEffect(() => {
     let comfy: ComfyJSInstance | null = null;
     let connected = false;
+    let lastProcessedId = '';
+    let lastProcessedTime = 0;
 
     async function init() {
       if (!twitchChannel) return;
@@ -68,10 +70,19 @@ export default function Home() {
           const id = message.trim().split(/\s+/)[0]?.toUpperCase();
           if (!id) return;
 
+          // Debounce: ignore if same ID was processed within 500ms
+          const now = Date.now();
+          if (id === lastProcessedId && (now - lastProcessedTime) < 500) {
+            return;
+          }
+
+          lastProcessedId = id;
+          lastProcessedTime = now;
+
           setQueue((current) => {
             const song = songsRef.current[id];
             if (!song) {
-              setError(t("errors.songIdNotFound", { id }));
+              setError(t("errors.songIdNotFound", {id}));
               setTimeout(() => setError(""), 4000);
               return current;
             }
@@ -91,17 +102,19 @@ export default function Home() {
       }
     }
 
-    init().then(r => console.log("ComfyJS initialized", r));
+    init();
 
     return () => {
       try {
-        if (comfy && connected && comfy.Disconnect) comfy.Disconnect();
+        if (comfy && connected) {
+          comfy.onCommand = () => {};
+          if (comfy.Disconnect) comfy.Disconnect();
+        }
       } catch {
         // no-op
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [twitchChannel]);
+  }, [t, twitchChannel]);
 
   function buildEntryFromId(id: string, viewer: string): QueueEntry | null {
     const song = songsRef.current[id];
@@ -328,7 +341,7 @@ export default function Home() {
                 className="flex-1 rounded bg-green-600 px-3 py-2"
                 onClick={() => {
                   setSettingsOpen(false);
-                  fetchSongs().then(r => console.log("Songs fetched after saving settings", r));
+                  fetchSongs();
                 }}
               >
                 {t("saveAndLoad")}
