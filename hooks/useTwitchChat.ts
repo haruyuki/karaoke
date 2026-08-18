@@ -1,6 +1,7 @@
 // hooks/useTwitchChat.ts
 import { ComfyJSInstance } from 'comfy.js';
-import {RefObject, useCallback, useEffect, useRef, useState} from 'react';
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 type QueueEntry = {
   id: string;
@@ -28,10 +29,11 @@ interface UseTwitchChatProps {
   songsRef: RefObject<SongMap>;
   onQueueAdd: (entry: QueueEntry) => void;
   onError: (error: string) => void;
-  t: (key: string, values?: any) => string;
 }
 
-export function useTwitchChat({ channel, songsRef, onQueueAdd, onError, t }: UseTwitchChatProps) {
+export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwitchChatProps) {
+  const t = useTranslations('Page');
+
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     if (typeof window === 'undefined') return false;
     return !!localStorage.getItem('twitch_oauth_token');
@@ -75,9 +77,10 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError, t }: Use
         const errorMessage = t('errors.songIdNotFound', { id });
         if (comfySingleton && isComfyInitialized) {
           try {
+            // @ts-expect-error Say method exists on ComfyJSInstance
             comfySingleton.Say(`@${user} ${errorMessage}`);
           } catch {
-            // Silently fail if can't send
+            // Silently fail if you can't send
           }
         }
         onError(errorMessage);
@@ -95,9 +98,10 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError, t }: Use
             name: entry.name,
             position: queuePosition,
           });
+          // @ts-expect-error Say method exists on ComfyJSInstance
           comfySingleton.Say(`@${user} ${confirmMessage}`);
         } catch {
-          // Silently fail if can't send
+          // Silently fail if you can't send
         }
       }
 
@@ -163,6 +167,7 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError, t }: Use
           const token = localStorage.getItem('twitch_oauth_token');
           if (token && comfySingleton && isComfyInitialized) {
             try {
+              // @ts-expect-error Say method exists on ComfyJSInstance
               comfySingleton.Say(`🎤 ${t('chat.botConnected')}`);
             } catch {
               // no-op
@@ -216,7 +221,7 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError, t }: Use
           } catch (e) {
             console.error('Failed to update ComfyJS with token', e);
             // Fallback: reinitialize
-            initializeComfyJS();
+            void initializeComfyJS();
           }
         }
 
@@ -264,9 +269,7 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError, t }: Use
       }
 
       const redirectUri = window.location.origin;
-      const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=chat:read+chat:edit`;
-
-      window.location.href = authUrl;
+      window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=chat:read+chat:edit`;
       return 'redirecting';
     }
   }, [channel, handleCommand, t]);
@@ -301,7 +304,7 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError, t }: Use
 
     // Initialize ComfyJS if channel exists
     if (channel && !hasToken) {
-      initializeComfyJS();
+      void initializeComfyJS();
     }
 
     return () => {

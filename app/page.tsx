@@ -74,7 +74,6 @@ export default function Home() {
     songsRef,
     onQueueAdd: addToQueue,
     onError: setError,
-    t,
   });
 
   // Calculate derived values
@@ -365,7 +364,7 @@ export default function Home() {
                 className="flex-1 rounded bg-green-600 px-3 py-2"
                 onClick={() => {
                   setSettingsOpen(false);
-                  fetchSongs();
+                  void fetchSongs();
                 }}
               >
                 {t('saveAndLoad')}
