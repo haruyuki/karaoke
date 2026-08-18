@@ -13,7 +13,7 @@ export default function Header() {
       <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 md:py-3 lg:px-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="rounded-xl bg-linear-to-br from-blue-600 to-purple-600 p-3 shadow-lg">
+            <div className="rounded-xl bg-linear-to-br from-purple-600 to-purple-800 p-3 shadow-lg">
               <MicVocal className="h-8 w-8 text-white" />
             </div>
             <div>
