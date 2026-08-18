@@ -89,22 +89,37 @@ export async function GET(request) {
     const text = await res.text();
     const rows = parseCSV(text);
     const out = {};
+
     for (let i = 0; i < rows.length; i++) {
       const r = rows[i];
-      // row 1 in sheet is header row: ID, Song Name, Link
+      // row 1 in sheet is header row, skip it
       if (i === 0) continue;
       // skip empty rows
       if (r.length === 1 && r[0] === '') continue;
-      if (r.length !== 3) {
-        return NextResponse.json({ error: 'CSV must contain exactly 3 columns per row' }, { status: 400 });
+
+      // Process columns in pairs: ID, Name, ID, Name, ID, Name, ID, Name
+      // Column 1: Chinese ID, Column 2: Chinese Name
+      // Column 3: English ID, Column 4: English Name
+      // Column 5: Japanese ID, Column 6: Japanese Name
+      // Column 7: Other ID, Column 8: Other Name
+
+      // Ensure we have at least the minimum columns (though we'll check each pair)
+      if (r.length < 2) continue;
+
+      // Process each language pair
+      for (let j = 0; j < Math.min(r.length, 8); j += 2) {
+        const id = String(r[j] || '').trim();
+        const name = String(r[j + 1] || '').trim();
+
+        // Only add if ID is not empty
+        if (id) {
+          // If the same ID appears multiple times (unlikely), we'll overwrite
+          // Could also append language suffix if needed, but keeping original behavior
+          out[id] = { name };
+        }
       }
-      const [idRaw, nameRaw, urlRaw] = r;
-      const id = String(idRaw).trim();
-      const name = String(nameRaw).trim();
-      const link = String(urlRaw).trim();
-      if (!id) continue;
-      out[id] = { name, url: link };
     }
+
     return NextResponse.json(out);
   } catch (e) {
     return NextResponse.json({ error: 'Server error: ' + String(e) }, { status: 500 });
