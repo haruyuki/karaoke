@@ -6,6 +6,7 @@ import QueueTabContent from '@/components/QueueTabContent';
 import SongListTabContent from '@/components/SongListTabContent';
 import Header from '@/components/Header';
 import { useTwitchChat } from '@/hooks/useTwitchChat';
+import { ToastContainer } from '@/components/ToastContainer';
 
 type SongEntry = {
   name: string;
@@ -20,6 +21,12 @@ type QueueEntry = {
   url: string;
   viewer: string;
   addedAt: number;
+};
+
+type ToastItem = {
+  id: string;
+  message: string;
+  type?: 'error' | 'success' | 'info';
 };
 
 export default function Home() {
@@ -37,7 +44,7 @@ export default function Home() {
   });
 
   const [songs, setSongs] = useState<SongMap>({});
-  const [error, setError] = useState('');
+  const [toasts, setToasts] = useState<ToastItem[]>([]); // NEW: toast queue
   const [queue, setQueue] = useState<QueueEntry[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'queue' | 'songlist'>('queue');
@@ -52,6 +59,24 @@ export default function Home() {
     songsRef.current = songs;
   }, [songs]);
 
+  // --- Toast helpers ---
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  const addToast = useCallback(
+    (message: string, type: 'error' | 'success' | 'info' = 'error') => {
+      const id = `${Date.now()}-${Math.random()}`;
+      setToasts((prev) => [...prev, { id, message, type }]);
+
+      // Auto‑dismiss after 4 seconds
+      setTimeout(() => {
+        removeToast(id);
+      }, 4000);
+    },
+    [removeToast],
+  );
+
   // Queue operations
   const addToQueue = useCallback((entry: QueueEntry) => {
     setQueue((current) => [...current, entry]);
@@ -61,12 +86,12 @@ export default function Home() {
     setQueue((current) => current.filter((_, i) => i !== index));
   }, []);
 
-  // Twitch chat hook
+  // Twitch chat hook – now passes `addToast` as the error handler
   const { isAuthenticated, connectTwitch, resetConnection } = useTwitchChat({
     channel: twitchChannel,
     songsRef,
     onQueueAdd: addToQueue,
-    onError: setError,
+    onError: addToast, // <-- pass addToast instead of setError
   });
 
   // Calculate derived values
@@ -77,8 +102,7 @@ export default function Home() {
     (id: string, viewer: string): QueueEntry | null => {
       const song = songsRef.current[id];
       if (!song) {
-        setError(t('errors.songIdNotFound', { id }));
-        setTimeout(() => setError(''), 4000);
+        addToast(t('errors.songIdNotFound', { id })); // <-- use addToast
         return null;
       }
 
@@ -90,7 +114,7 @@ export default function Home() {
         addedAt: Date.now(),
       };
     },
-    [t],
+    [t, addToast],
   );
 
   // Handlers
@@ -124,19 +148,16 @@ export default function Home() {
     try {
       const result = connectTwitch();
       if (result === 'disconnected') {
-        setError(t('auth.disconnected'));
-        setTimeout(() => setError(''), 3000);
+        addToast(t('auth.disconnected')); // <-- use addToast
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-      setTimeout(() => setError(''), 4000);
+      addToast(e instanceof Error ? e.message : String(e)); // <-- use addToast
     }
-  }, [connectTwitch, t]);
+  }, [connectTwitch, t, addToast]);
 
   const fetchSongs = useCallback(async () => {
-    setError('');
     if (!sheetUrl) {
-      setError(t('errors.noSheetUrlProvided'));
+      addToast(t('errors.noSheetUrlProvided')); // <-- use addToast
       return;
     }
 
@@ -144,16 +165,17 @@ export default function Home() {
       const res = await fetch(`/api/get-songs?sheetUrl=${encodeURIComponent(sheetUrl)}`);
       if (!res.ok) {
         const payload = (await res.json().catch(() => ({}))) as { error?: string };
-        setError(payload?.error || t('errors.fetchFailed', { status: res.status }));
+        addToast(payload?.error || t('errors.fetchFailed', { status: res.status })); // <-- use addToast
         return;
       }
 
       const data = (await res.json()) as SongMap;
       setSongs(data);
+      addToast(t('songsLoadedSuccess'), 'success'); // optional success toast
     } catch (e) {
-      setError(String(e));
+      addToast(String(e)); // <-- use addToast
     }
-  }, [sheetUrl, t]);
+  }, [sheetUrl, t, addToast]);
 
   const manualAdd = useCallback(
     (e: SyntheticEvent<HTMLFormElement>) => {
@@ -162,14 +184,14 @@ export default function Home() {
       const id = idRef.current?.value.trim().toUpperCase() || '';
       const viewer = viewerRef.current?.value.trim() || 'manual';
       if (!id) {
-        setError(t('errors.provideId'));
+        addToast(t('errors.provideId')); // <-- use addToast
         return;
       }
 
       const entry = buildEntryFromId(id, viewer);
       if (entry) setQueue((current) => [...current, entry]);
     },
-    [buildEntryFromId, t],
+    [buildEntryFromId, t, addToast],
   );
 
   const queueFromSong = useCallback((id: string, name: string, url: string) => {
@@ -182,7 +204,8 @@ export default function Home() {
     resetConnection();
   }, [handleTwitchChannelChange, handleSheetUrlChange, resetConnection]);
 
-  // Memoized UI content
+  // Memoized UI content (sidebar and mainContent remain almost identical,
+  // except we removed the inline error display)
   const sidebarContent = useMemo(
     () => (
       <aside className="flex w-80 flex-col border-r border-gray-700 bg-gray-800 pt-4">
@@ -213,8 +236,7 @@ export default function Home() {
 
         <div className="mt-auto space-y-4 p-4">
           <div className="text-xs text-gray-500">
-            {t('tipPrefix')}{' '}
-            <code className="rounded bg-gray-800 px-1">!addsong ID</code> or{' '}
+            {t('tipPrefix')} <code className="rounded bg-gray-800 px-1">!addsong ID</code> or{' '}
             <code className="rounded bg-gray-800 px-1">!點歌 ID</code> or{' '}
             <code className="rounded bg-gray-800 px-1">!うた ID</code>
           </div>
@@ -262,8 +284,6 @@ export default function Home() {
           </div>
         </div>
 
-        {error && <div className="mb-4 text-red-400">{t('errorPrefix', { error })}</div>}
-
         {activeTab === 'queue' && (
           <QueueTabContent
             queue={queue}
@@ -280,18 +300,7 @@ export default function Home() {
         )}
       </main>
     ),
-    [
-      activeTab,
-      t,
-      songCount,
-      error,
-      queue,
-      songs,
-      fetchSongs,
-      manualAdd,
-      removeFromQueue,
-      queueFromSong,
-    ],
+    [activeTab, t, songCount, queue, songs, fetchSongs, manualAdd, removeFromQueue, queueFromSong],
   );
 
   const settingsModal = useMemo(
@@ -397,6 +406,9 @@ export default function Home() {
       </div>
 
       {settingsModal}
+
+      {/* Toast container – renders all active toasts in a stack */}
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
     </div>
   );
 }
