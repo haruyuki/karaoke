@@ -8,6 +8,7 @@
       "songlist": "Song List"
     },
     "songsLoaded": "Songs loaded",
+    "songsLoadedSuccess": "Songs loaded successfully",
     "loadedSongsCount": "Loaded songs: {count}",
     "settings": "Settings",
     "refreshSongs": "Refresh Songs",

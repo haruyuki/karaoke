@@ -8,6 +8,7 @@
       "songlist": "歌曲清單"
     },
     "songsLoaded": "歌曲已載入",
+    "songsLoadedSuccess": "歌曲已成功載入",
     "loadedSongsCount": "已載入歌曲數：{count}",
     "settings": "設定",
     "refreshSongs": "重新整理歌曲",
