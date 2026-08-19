@@ -1,11 +1,11 @@
 {
   "Header": {
-    "title": "Haru Karaoke"
+    "title": "Haru Karaoke Twitch Helper"
   },
   "Page": {
     "tabs": {
       "queue": "Queue",
-      "songlist": "Songlist"
+      "songlist": "Song List"
     },
     "songsLoaded": "Songs loaded",
     "loadedSongsCount": "Loaded songs: {count}",
@@ -16,22 +16,22 @@
     "reset": "Reset",
     "tipPrefix": "Tip: Use chat commands",
     "errorPrefix": "Error: {error}",
-    "settingsHelp": "Make sure sheet is public or published as CSV. App converts sheet link to CSV export URL automatically.",
+    "settingsHelp": "Make sure the sheet is publicly accessible.",
     "settingsFields": {
       "twitchChannel": "Twitch Channel",
-      "twitchChannelPlaceholder": "streamer_channel_name",
+      "twitchChannelPlaceholder": "channel_name",
       "googleSheetUrl": "Google Sheet URL",
       "googleSheetUrlPlaceholder": "https://docs.google.com/spreadsheets/d/XXX"
     },
     "auth": {
-      "connected": "Connected to Twitch chat with write permissions",
+      "connected": "Connected to Twitch chat",
       "disconnected": "Disconnected from Twitch chat",
       "connectHelp": "Connect to send chat responses automatically",
-      "missingClientId": "Twitch Client ID not configured. Please add NEXT_PUBLIC_TWITCH_CLIENT_ID to your .env.local file."
+      "missingClientId": "Twitch Client ID not configured. Please contact site owner."
     },
     "chat": {
-      "confirmation": "Successfully added [{id}] {name} to the queue!",
-      "botConnected": "Song request bot is now online and ready!"
+      "confirmation": "Successfully added \"{name}\" to the queue!",
+      "botConnected": "Karaoke helper connected to Twitch chat!"
     },
     "errors": {
       "songIdNotFound": "Song ID '{id}' not found in the database",
@@ -43,7 +43,7 @@
   "QueueTab": {
     "title": "Queue List",
     "clearQueue": "Clear Queue",
-    "idPlaceholder": "ID e.g. C213",
+    "idPlaceholder": "C213",
     "viewerPlaceholder": "Viewer name (optional)",
     "addToQueue": "Add to Queue",
     "queueEmpty": "Queue empty",

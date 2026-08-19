@@ -1,50 +1,60 @@
 {
   "Header": {
-    "title": "Haru Karaoke"
+    "title": "Haru Karaoke Twitch Helper"
   },
   "Page": {
     "tabs": {
-      "queue": "點歌佇列",
+      "queue": "佇列",
       "songlist": "歌曲清單"
     },
-    "songsLoaded": "已載入歌曲",
-    "loadedSongsCount": "已載入歌曲：{count}",
+    "songsLoaded": "歌曲已載入",
+    "loadedSongsCount": "已載入歌曲數：{count}",
     "settings": "設定",
-    "refreshSongs": "重新載入歌曲",
+    "refreshSongs": "重新整理歌曲",
     "close": "關閉",
     "saveAndLoad": "儲存並載入",
     "reset": "重設",
-    "tipPrefix": "提示：聊天室指令",
+    "tipPrefix": "提示：使用聊天指令",
     "errorPrefix": "錯誤：{error}",
-    "settingsHelp": "請確認試算表已公開或已發佈為 CSV。應用程式會自動把試算表連結轉成 CSV 匯出連結。",
+    "settingsHelp": "請確保試算表為公開存取。",
     "settingsFields": {
       "twitchChannel": "Twitch 頻道",
-      "twitchChannelPlaceholder": "streamer_channel_name",
-      "googleSheetUrl": "Google 試算表網址",
-      "googleSheetUrlPlaceholder": "https://docs.google.com/spreadsheets/d/{id}"
+      "twitchChannelPlaceholder": "頻道名稱",
+      "googleSheetUrl": "Google Sheets網址",
+      "googleSheetUrlPlaceholder": "https://docs.google.com/spreadsheets/d/XXX"
+    },
+    "auth": {
+      "connected": "已連線至 Twitch 聊天室",
+      "disconnected": "已中斷 Twitch 聊天室連線",
+      "connectHelp": "連線後將自動傳送聊天回覆",
+      "missingClientId": "未設定 Twitch Client ID，請聯絡網站管理員。"
+    },
+    "chat": {
+      "confirmation": "已成功將「{name}」加入佇列！",
+      "botConnected": "Karaoke helper已連線至Twitch聊天室！"
     },
     "errors": {
-      "songIdNotFound": "找不到歌曲 ID {id}。",
-      "noSheetUrlProvided": "尚未提供試算表網址。",
-      "fetchFailed": "抓取失敗：{status}",
-      "provideId": "請輸入 ID"
+      "songIdNotFound": "在資料庫中找不到歌曲 ID「{id}」",
+      "provideId": "請提供歌曲 ID",
+      "noSheetUrlProvided": "未提供Google Sheets網址",
+      "fetchFailed": "無法取得歌曲，狀態：{status}"
     }
   },
   "QueueTab": {
-    "title": "點歌佇列",
-    "clearQueue": "清空佇列",
-    "idPlaceholder": "ID 例如 C213",
-    "viewerPlaceholder": "觀眾名稱（可選）",
+    "title": "佇列清單",
+    "clearQueue": "清除佇列",
+    "idPlaceholder": "C213",
+    "viewerPlaceholder": "觀眾名稱（選填）",
     "addToQueue": "加入佇列",
     "queueEmpty": "佇列為空",
-    "requestedBy": "點歌者：{viewer}",
+    "requestedBy": "由 {viewer} 點播",
     "openLink": "開啟連結",
     "remove": "移除"
   },
   "SongListTab": {
-    "title": "歌曲清單（前 200 筆）",
+    "title": "歌曲清單（前 200 首）",
     "noSongsLoaded": "尚未載入歌曲",
     "open": "開啟",
-    "queue": "加入佇列"
+    "queue": "佇列"
   }
 }
