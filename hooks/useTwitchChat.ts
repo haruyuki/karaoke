@@ -1,4 +1,3 @@
-// hooks/useTwitchChat.ts
 import { ComfyJSInstance } from 'comfy.js';
 import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
