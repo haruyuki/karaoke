@@ -1,5 +1,5 @@
 import { ComfyJSInstance } from 'comfy.js';
-import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
+import { RefObject, useCallback, useEffect, useRef, useState, startTransition } from 'react';
 import { useTranslations } from 'next-intl';
 
 type QueueEntry = {
@@ -18,7 +18,6 @@ type SongMap = Record<
   }
 >;
 
-// Singleton pattern for ComfyJS instance
 let comfySingleton: ComfyJSInstance | null = null;
 let isComfyInitialized = false;
 let commandHandlerRegistered = false;
@@ -27,10 +26,10 @@ interface UseTwitchChatProps {
   channel: string;
   songsRef: RefObject<SongMap>;
   onQueueAdd: (entry: QueueEntry) => void;
-  onError: (error: string) => void;
+  onToast: (message: string, type?: 'error' | 'success' | 'info') => void;
 }
 
-export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwitchChatProps) {
+export function useTwitchChat({ channel, songsRef, onQueueAdd, onToast }: UseTwitchChatProps) {
   const t = useTranslations('Page');
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -41,8 +40,15 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
   const isMountedRef = useRef(true);
   const lastProcessedId = useRef('');
   const lastProcessedTime = useRef(0);
+  const hasShownConnectionToast = useRef(false);
+  const hasProcessedOAuth = useRef(false); // prevent double processing
 
-  // Command handler - stable reference
+  // Reset connection toast flag
+  const resetConnectionToastFlag = useCallback(() => {
+    hasShownConnectionToast.current = false;
+  }, []);
+
+  // Command handler
   const handleCommand = useCallback(
     (user: string, command: string, message: string) => {
       const cmd = command.toLowerCase();
@@ -51,7 +57,6 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
       const id = message.trim().split(/\s+/)[0]?.toUpperCase();
       if (!id) return;
 
-      // Debounce: ignore if same ID was processed within 500ms
       const now = Date.now();
       if (id === lastProcessedId.current && now - lastProcessedTime.current < 500) {
         return;
@@ -72,44 +77,49 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
         : null;
 
       if (!entry) {
-        // Send error message back to chat
         const errorMessage = t('errors.songIdNotFound', { id });
         if (comfySingleton && isComfyInitialized) {
           try {
-            // @ts-expect-error Say method exists on ComfyJSInstance
+            // @ts-expect-error Say method exists
             comfySingleton.Say(`@${user} ${errorMessage}`);
           } catch {
-            // Silently fail if you can't send
+            // ignore
           }
         }
-        onError(errorMessage);
-        setTimeout(() => onError(''), 4000);
+        onToast(errorMessage, 'error');
         return;
       }
 
-      // Send success confirmation to chat
+      // Send chat confirmation
       if (comfySingleton && isComfyInitialized) {
         try {
-          const queuePosition = 0; // Will be updated by the component
+          const queuePosition = 0;
           const confirmMessage = t('chat.confirmation', {
             user: user,
             id: id,
             name: entry.name,
             position: queuePosition,
           });
-          // @ts-expect-error Say method exists on ComfyJSInstance
+          // @ts-expect-error Say method exists
           comfySingleton.Say(`@${user} ${confirmMessage}`);
         } catch {
-          // Silently fail if you can't send
+          // ignore
         }
       }
 
+      const toastMsg = t('chat.confirmation', {
+        user: user,
+        id: id,
+        name: entry.name,
+        position: 0,
+      });
+      onToast(toastMsg, 'success');
       onQueueAdd(entry);
     },
-    [songsRef, onQueueAdd, onError, t],
+    [songsRef, onQueueAdd, onToast, t],
   );
 
-  // Initialize ComfyJS
+  // Initialize ComfyJS (without token by default)
   const initializeComfyJS = useCallback(async () => {
     if (!channel || !isMountedRef.current) return;
 
@@ -128,6 +138,7 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
         }
         isComfyInitialized = false;
         commandHandlerRegistered = false;
+        resetConnectionToastFlag();
       }
 
       const mod = await import('comfy.js');
@@ -136,40 +147,34 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
 
       comfySingleton = comfy;
 
-      // Check for token
       const token = localStorage.getItem('twitch_oauth_token');
 
-      // Initialize with or without token
       if (token) {
         comfy.Init(channel, token);
-        if (isMountedRef.current) {
-          setIsAuthenticated(true);
-        }
+        startTransition(() => {
+          if (isMountedRef.current) setIsAuthenticated(true);
+        });
       } else {
         comfy.Init(channel);
-        if (isMountedRef.current) {
-          setIsAuthenticated(false);
-        }
+        startTransition(() => {
+          if (isMountedRef.current) setIsAuthenticated(false);
+        });
       }
 
       isComfyInitialized = true;
 
-      // Only register command handler once
       if (!commandHandlerRegistered) {
         comfy.onCommand = handleCommand;
         commandHandlerRegistered = true;
       }
 
-      // Connection confirmation
       if (isMountedRef.current) {
         comfy.onConnected = () => {
           const token = localStorage.getItem('twitch_oauth_token');
           if (token && comfySingleton && isComfyInitialized) {
-            try {
-              // @ts-expect-error Say method exists on ComfyJSInstance
-              comfySingleton.Say(`🎤 ${t('chat.botConnected')}`);
-            } catch {
-              // no-op
+            if (!hasShownConnectionToast.current) {
+              hasShownConnectionToast.current = true;
+              onToast(t('chat.botConnected'), 'success');
             }
           }
         };
@@ -177,67 +182,68 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
     } catch (e) {
       console.error('ComfyJS init failed', e);
     }
-  }, [channel, handleCommand, t]);
+  }, [channel, handleCommand, t, onToast, resetConnectionToastFlag]);
 
-  // Handle OAuth token capture
-  const handleOAuthRedirect = useCallback(() => {
-    if (typeof window === 'undefined') return;
+  // Handle OAuth token from URL hash – run only once on mount
+  useEffect(() => {
+    if (typeof window === 'undefined' || hasProcessedOAuth.current) return;
 
-    if (window.location.hash) {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
+    const hash = window.location.hash;
+    if (!hash) return;
 
-      if (accessToken) {
-        // Save token to localStorage
-        localStorage.setItem('twitch_oauth_token', accessToken);
+    const hashParams = new URLSearchParams(hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+
+    if (accessToken) {
+      hasProcessedOAuth.current = true;
+
+      // Save token
+      localStorage.setItem('twitch_oauth_token', accessToken);
+
+      startTransition(() => {
         setIsAuthenticated(true);
+      });
 
-        // Clean URL
-        window.history.replaceState(
-          {},
-          document.title,
-          window.location.pathname + window.location.search,
-        );
+      // Clean URL
+      window.history.replaceState(
+        {},
+        document.title,
+        window.location.pathname + window.location.search,
+      );
 
-        // Update ComfyJS with new token
-        if (comfySingleton && isComfyInitialized && channel) {
-          try {
-            // Clean up old connection
-            if (comfySingleton.onCommand) {
-              comfySingleton.onCommand = () => {};
-            }
-            if (comfySingleton.Disconnect) {
-              comfySingleton.Disconnect();
-            }
-            isComfyInitialized = false;
-            commandHandlerRegistered = false;
-
-            // Reinitialize with token
-            comfySingleton.Init(channel, accessToken);
-            isComfyInitialized = true;
-            comfySingleton.onCommand = handleCommand;
-            commandHandlerRegistered = true;
-          } catch (e) {
-            console.error('Failed to update ComfyJS with token', e);
-            // Fallback: reinitialize
-            void initializeComfyJS();
-          }
-        }
-
-        return true;
-      }
+      // Reinitialize with the new token
+      void initializeComfyJS();
     }
-    return false;
-  }, [channel, handleCommand, initializeComfyJS]);
+  }, [initializeComfyJS]);
 
-  // Connect to Twitch OAuth
+  // Main initialization effect (when channel changes or after OAuth)
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    // If we already have a token and the channel exists, initialize
+    if (channel && !hasProcessedOAuth.current) {
+      // If we have a token, we can initialize; but we might still be processing OAuth
+      // To avoid race, we only initialize if we're not waiting for OAuth redirect.
+      // We can simply call initializeComfyJS, which will read the token.
+      void initializeComfyJS();
+    }
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [channel, initializeComfyJS]);
+
+  // Connect/disconnect Twitch OAuth
   const connectTwitch = useCallback(() => {
     const token = localStorage.getItem('twitch_oauth_token');
 
     if (token) {
       // Disconnect
       localStorage.removeItem('twitch_oauth_token');
-      setIsAuthenticated(false);
+      startTransition(() => {
+        setIsAuthenticated(false);
+      });
+      resetConnectionToastFlag();
 
       if (comfySingleton && isComfyInitialized && channel) {
         try {
@@ -249,7 +255,6 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
           }
           isComfyInitialized = false;
           commandHandlerRegistered = false;
-
           comfySingleton.Init(channel);
           isComfyInitialized = true;
           comfySingleton.onCommand = handleCommand;
@@ -258,7 +263,6 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
           console.error('Failed to disconnect ComfyJS', e);
         }
       }
-
       return 'disconnected';
     } else {
       // Connect
@@ -266,14 +270,13 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
       if (!clientId) {
         throw new Error(t('auth.missingClientId'));
       }
-
       const redirectUri = window.location.origin;
       window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=token&scope=chat:read+chat:edit`;
       return 'redirecting';
     }
-  }, [channel, handleCommand, t]);
+  }, [channel, handleCommand, t, resetConnectionToastFlag]);
 
-  // Reset ComfyJS connection
+  // Reset connection
   const resetConnection = useCallback(() => {
     if (comfySingleton && isComfyInitialized) {
       try {
@@ -285,33 +288,16 @@ export function useTwitchChat({ channel, songsRef, onQueueAdd, onError }: UseTwi
         }
         isComfyInitialized = false;
         commandHandlerRegistered = false;
+        resetConnectionToastFlag();
       } catch (e) {
         console.error('Failed to reset ComfyJS', e);
       }
     }
     localStorage.removeItem('twitch_oauth_token');
-    setIsAuthenticated(false);
-  }, []);
-
-  // Main initialization effect
-  useEffect(() => {
-    isMountedRef.current = true;
-    let ignore = false;
-
-    // Handle OAuth redirect first
-    const hasToken = handleOAuthRedirect();
-
-    // Initialize ComfyJS if channel exists
-    if (channel && !hasToken) {
-      void initializeComfyJS();
-    }
-
-    return () => {
-      isMountedRef.current = false;
-      ignore = true;
-      // Don't disconnect here - let the next initialization handle it
-    };
-  }, [channel, initializeComfyJS, handleOAuthRedirect]);
+    startTransition(() => {
+      setIsAuthenticated(false);
+    });
+  }, [resetConnectionToastFlag]);
 
   return {
     isAuthenticated,

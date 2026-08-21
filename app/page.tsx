@@ -91,7 +91,7 @@ export default function Home() {
     channel: twitchChannel,
     songsRef,
     onQueueAdd: addToQueue,
-    onError: addToast, // <-- pass addToast instead of setError
+    onToast: addToast,
   });
 
   // Calculate derived values
@@ -102,7 +102,7 @@ export default function Home() {
     (id: string, viewer: string): QueueEntry | null => {
       const song = songsRef.current[id];
       if (!song) {
-        addToast(t('errors.songIdNotFound', { id })); // <-- use addToast
+        addToast(t('errors.songIdNotFound', { id }));
         return null;
       }
 
@@ -148,16 +148,16 @@ export default function Home() {
     try {
       const result = connectTwitch();
       if (result === 'disconnected') {
-        addToast(t('auth.disconnected')); // <-- use addToast
+        addToast(t('auth.disconnected'));
       }
     } catch (e) {
-      addToast(e instanceof Error ? e.message : String(e)); // <-- use addToast
+      addToast(e instanceof Error ? e.message : String(e));
     }
   }, [connectTwitch, t, addToast]);
 
   const fetchSongs = useCallback(async () => {
     if (!sheetUrl) {
-      addToast(t('errors.noSheetUrlProvided')); // <-- use addToast
+      addToast(t('errors.noSheetUrlProvided'));
       return;
     }
 
@@ -165,7 +165,7 @@ export default function Home() {
       const res = await fetch(`/api/get-songs?sheetUrl=${encodeURIComponent(sheetUrl)}`);
       if (!res.ok) {
         const payload = (await res.json().catch(() => ({}))) as { error?: string };
-        addToast(payload?.error || t('errors.fetchFailed', { status: res.status })); // <-- use addToast
+        addToast(payload?.error || t('errors.fetchFailed', { status: res.status }));
         return;
       }
 
@@ -173,7 +173,7 @@ export default function Home() {
       setSongs(data);
       addToast(t('songsLoadedSuccess'), 'success'); // optional success toast
     } catch (e) {
-      addToast(String(e)); // <-- use addToast
+      addToast(String(e));
     }
   }, [sheetUrl, t, addToast]);
 
@@ -184,7 +184,7 @@ export default function Home() {
       const id = idRef.current?.value.trim().toUpperCase() || '';
       const viewer = viewerRef.current?.value.trim() || 'manual';
       if (!id) {
-        addToast(t('errors.provideId')); // <-- use addToast
+        addToast(t('errors.provideId'));
         return;
       }
 
